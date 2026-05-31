@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Đọc dữ liệu đã làm sạch
+# Đọc data đã làm sạch
 df = pd.read_csv("VN30_Cleaned_Dataset.csv")
 
 # Đếm số lượng mỗi nhãn
@@ -29,4 +29,5 @@ plt.ylabel('Số lượng (Ngày)', fontsize=12)
 for i, count in enumerate(target_counts):
     plt.text(i, count + 50, str(count), ha='center', fontsize=12, fontweight='bold')
 
+plt.savefig("chart/phan_phoi_nhan_T3.png", dpi=300, bbox_inches='tight')
 plt.show()

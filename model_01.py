@@ -50,26 +50,32 @@ print("\nBắt đầu quá trình huấn luyện ")
 xgb_model.fit(X_train, y_train)
 print("Huấn luyện thành công!")
 
-# LÀM BÀI THI TRÊN TẬP TEST (2025-2026)
-print("\nĐang làm bài thi trên dữ liệu 2025-2026")
+# DỰ BÁO TRÊN TẬP TEST (2025-2026)
+print("\nĐang dự báo trên dữ liệu 2025-2026")
 y_pred = xgb_model.predict(X_test)
 
 # XUẤT BÁO CÁO KẾT QUẢ
 print("BÁO CÁO KẾT QUẢ")
 print(classification_report(y_test, y_pred, target_names=['Nhãn 0 (Không Mua)', 'Nhãn 1 (MUA)']))
 
-# VẼ MA TRẬN NHẦM LẪN (CONFUSION MATRIX)
+# VẼ MA TRẬN NHẦM LẪN
 cm = confusion_matrix(y_test, y_pred)
+
+true_positives = cm[1, 1]
+false_positives = cm[0, 1]
+total_predicted_buys = true_positives + false_positives
+winrate = true_positives / total_predicted_buys
+
 plt.figure(figsize=(7, 5))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
             xticklabels=['Đoán: KHÔNG MUA', 'Đoán: MUA'],
             yticklabels=['Thực tế: KHÔNG TĂNG', 'Thực tế: TĂNG > 1.5%'])
-plt.title('Ma Trận Nhầm Lẫn (Tập Test 2025-2026)', fontsize=14, fontweight='bold')
+plt.title(f'Ma trận nhầm lẫn Thực nghiệm 1 (Win-rate = {winrate*100:.2f}%)', fontsize=14, fontweight='bold')
 plt.tight_layout()
-plt.show()
+plt.savefig('chart/TN1.png', bbox_inches='tight')
+plt.close()
 
 # LƯU LẠI MÔ HÌNH ĐÃ TRAIN XONG
 model_filename = "xgboost_quant_model.pkl"
 joblib.dump(xgb_model, model_filename)
 print(f"\nĐã đóng gói dự đoán thành công vào file: {model_filename}")
-print("Thành công!")

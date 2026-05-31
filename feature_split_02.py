@@ -3,10 +3,10 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.class_weight import compute_class_weight
 
-print("XỬ LÝ DỮ LIỆU CHỨNG KHOÁN")
+print("XỬ LÝ DỮ LIỆU CHỨNG KHOÁN 2")
 
-# ĐỌC DATA ĐÃ LÀM SẠCH
-file_path = "VN30_Cleaned_Dataset.csv"
+# ĐỌC DATA ĐÃ LÀM SẠCH VÀ CẢI TIẾN LẦN 2
+file_path = "VN30_Dynamic_Dataset.csv"
 try:
     df = pd.read_csv(file_path)
     print(f"Đọc dữ liệu thành công! Tổng số dòng gốc: {len(df)}")
@@ -18,7 +18,7 @@ except FileNotFoundError:
 df = df.sort_values(by=['Ticker', 'time'])
 
 
-# CHIA DỮ LIỆU CHUẨN XÁC THEO MỐC THỜI GIAN
+# CHIA DATA CHUẨN XÁC THEO MỐC THỜI GIAN
 print("\nPhân tách dòng thời gian (2021-2024 làm Train, 2025-2026 làm Test)")
 
 # Đảm bảo cột 'time' là định dạng ngày tháng chuẩn của Pandas
@@ -35,9 +35,9 @@ print(f" - Dữ liệu Train: {len(train_df)} dòng")
 print(f" - Dữ liệu Test:    {len(test_df)} dòng")
 
 # Tách riêng phần biến độc lập (X_train) để đưa vào mô hình trinh sát tìm biến quan trọng
-cols_to_exclude = ['Ticker', 'time', 'open', 'high', 'low', 'close', 'volume', 'Future_Return_3D', 'Target_T3']
+cols_to_exclude = ['Ticker', 'time', 'open', 'high', 'low', 'close', 'volume', 'Future_Return_3D', 'Target_Dynamic']
 X_train_full = train_df.drop(columns=[col for col in cols_to_exclude if col in train_df.columns])
-y_train = train_df['Target_T3']
+y_train = train_df['Target_Dynamic']
 
 
 # LỌC ĐẶC TRƯNG
@@ -92,13 +92,14 @@ print(f" - Trọng số phạt nếu đoán sai Nhãn 0:        {weight_dict[0]:
 print(f" - Trọng số phạt nếu bỏ lỡ Nhãn 1:           {weight_dict[1]:.2f}")
 print(f"Tham số 'scale_pos_weight' cấu hình cho XGBoost: {scale_weight_xgb:.2f}")
 
-# ĐÓNG GÓI VÀ XUẤT FILE DATASET
+
+# ĐÓNG GÓI VÀ XUẤT FILE DATASET TỐI ƯU
 print("\nĐang đóng gói dữ liệu và lọc bỏ các biến rác")
 
 # Giữ lại các cột cốt lõi làm Metadata (Dùng cho Backtest tính tiền lời lỗ sau này) + Top 15 đặc trưng
-final_columns_to_keep = ['Ticker', 'time', 'close', 'Target_T3'] + top_15_features
+final_columns_to_keep = ['Ticker', 'time', 'close', 'Target_Dynamic'] + top_15_features
 
-# Ép xung 2 tập data theo danh sách cột tối ưu
+# Ép xung 2 tập dữ liệu theo danh sách cột tối ưu
 train_optimized = train_df[final_columns_to_keep]
 test_optimized = test_df[final_columns_to_keep]
 
