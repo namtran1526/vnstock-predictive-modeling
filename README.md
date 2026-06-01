@@ -19,12 +19,33 @@ Mục tiêu chính là tìm một cấu hình mô hình có khả năng phát hi
 - Chọn lọc đặc trưng theo domain knowledge.
 - Bộ lọc vĩ mô theo trạng thái VN30 mô phỏng.
 - Backtest giả lập giao dịch thực tế.
+- Slide thuyết trình case study tổng hợp vấn đề, phương pháp, thực nghiệm và kết luận.
 
 Kết luận thực nghiệm hiện tại: Thực nghiệm 2 với dữ liệu nguyên bản và nhãn Triple Barrier đạt Win-rate 42.58% và được chọn làm mô hình chính để backtest.
 
-## 2. Cấu hình môi trường
+## 2. Tài liệu thuyết trình case study
 
-### 2.1. Yêu cầu hệ thống
+Repo có kèm file `Slide.pdf` dùng cho phần thuyết trình case study. Slide này đóng vai trò bản trình bày ngắn gọn cho người nghe, trong khi `README.md` là tài liệu kỹ thuật chi tiết để tái lập pipeline và kiểm tra từng thực nghiệm.
+
+Nội dung thuyết trình nên được đọc theo luồng:
+
+- Bối cảnh bài toán: dự báo tín hiệu MUA trên rổ VN30 bằng dữ liệu OHLCV và chỉ báo kỹ thuật.
+- Cách xây dựng dữ liệu: tải dữ liệu, làm sạch, tạo chỉ báo, chia train/test theo thời gian.
+- Mô hình baseline T+3 và các giới hạn của nhãn cứng.
+- Chuỗi thực nghiệm cải tiến từ 1a đến 1e.
+- Thực nghiệm Triple Barrier và lý do chọn nhãn động để mô phỏng quản trị vị thế thực tế.
+- Backtest kiểm chứng khả năng sinh lời sau khi chọn mô hình tốt nhất trong phạm vi thực nghiệm.
+- Kết luận case study: chất lượng định nghĩa mục tiêu quan trọng hơn việc tăng độ phức tạp mô hình.
+
+Cách sử dụng:
+
+- Mở `Slide.pdf` để trình bày tổng quan trong buổi báo cáo.
+- Dùng các mục `Pipeline`, `Hướng dẫn chạy đúng theo từng thực nghiệm` và `Báo cáo chi tiết các thực nghiệm` trong README để giải thích sâu khi cần truy vết số liệu.
+- Khi demo live, nên chạy lại đúng pipeline của Thực nghiệm 2 trước rồi mới chạy `backtest.py`, vì `VN30_Train.csv`, `VN30_Test.csv` và `xgboost_quant_model.pkl` đều có thể bị ghi đè bởi các thực nghiệm khác.
+
+## 3. Cấu hình môi trường
+
+### 3.1. Yêu cầu hệ thống
 
 - Python 3.10 trở lên được khuyến nghị.
 - Hệ điều hành: Windows, macOS hoặc Linux. Repo hiện đang được phát triển trên Windows.
@@ -32,7 +53,7 @@ Kết luận thực nghiệm hiện tại: Thực nghiệm 2 với dữ liệu n
 - Dung lượng trống tối thiểu khoảng 1 GB để lưu CSV, biểu đồ và model.
 - CPU đa nhân được khuyến nghị vì các mô hình dùng `n_jobs=-1`.
 
-### 2.2. Tạo môi trường ảo
+### 3.2. Tạo môi trường ảo
 
 Trên Windows PowerShell:
 
@@ -50,7 +71,7 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 ```
 
-### 2.3. Cài thư viện
+### 3.3. Cài thư viện
 
 Repo hiện chưa có `requirements.txt`, vì vậy có thể cài trực tiếp các thư viện được dùng trong code:
 
@@ -68,7 +89,7 @@ Các nhóm thư viện chính:
 - `matplotlib`, `seaborn`: vẽ ma trận nhầm lẫn, phân phối nhãn, equity curve.
 - `joblib`: lưu và tải model `.pkl`.
 
-### 2.4. Tạo thư mục biểu đồ nếu chưa có
+### 3.4. Tạo thư mục biểu đồ nếu chưa có
 
 Các script lưu hình vào thư mục `chart/`. Nếu clone repo mới và chưa có thư mục này, tạo trước:
 
@@ -76,7 +97,7 @@ Các script lưu hình vào thư mục `chart/`. Nếu clone repo mới và chư
 mkdir chart
 ```
 
-## 3. Cấu trúc thư mục và file
+## 4. Cấu trúc thư mục và file
 
 ```text
 vnstock-predictive-modeling/
@@ -110,6 +131,7 @@ vnstock-predictive-modeling/
 ├── model_02b.py
 ├── model_02c.py
 ├── backtest.py
+├── Slide.pdf
 ├── VN30_Advanced_Quant_Dataset.csv
 ├── VN30_Cleaned_Dataset.csv
 ├── VN30_Dynamic_Dataset.csv
@@ -119,7 +141,7 @@ vnstock-predictive-modeling/
 └── README.md
 ```
 
-### 3.1. Nhóm tạo và làm sạch dữ liệu
+### 4.1. Nhóm tạo và làm sạch dữ liệu
 
 | File | Vai trò | Input chính | Output chính |
 |---|---|---|---|
@@ -127,7 +149,7 @@ vnstock-predictive-modeling/
 | `data_cleaning.py` | Làm sạch dữ liệu, xóa cột trùng `ticker` nếu có, thay `inf/-inf` bằng `NaN`, drop các dòng lỗi. | `VN30_Advanced_Quant_Dataset.csv` | `VN30_Cleaned_Dataset.csv` |
 | `examine_data.py` | Kiểm tra phân phối nhãn T+3 và vẽ biểu đồ. | `VN30_Cleaned_Dataset.csv` | `chart/phan_phoi_nhan_T3.png` |
 
-### 3.2. Nhóm chia tập train/test
+### 4.2. Nhóm chia tập train/test
 
 | File | Vai trò | Input chính | Output chính |
 |---|---|---|---|
@@ -139,7 +161,7 @@ Mốc chia dữ liệu:
 - Train: dữ liệu có `time <= 2024-12-31`.
 - Test: dữ liệu có `time > 2024-12-31`, tức giai đoạn 2025-2026 theo dataset hiện tại.
 
-### 3.3. Nhóm mô hình và thực nghiệm
+### 4.3. Nhóm mô hình và thực nghiệm
 
 | File | Thực nghiệm | Vai trò | Output |
 |---|---|---|---|
@@ -155,8 +177,9 @@ Mốc chia dữ liệu:
 | `model_02b.py` | 2b | Chọn đặc trưng trực giao theo domain knowledge. | `chart/TN2b.png` |
 | `model_02c.py` | 2c | Bộ lọc vĩ mô bằng VN30 mô phỏng và SMA 100. | `chart/TN2c.png` |
 | `backtest.py` | Backtest | Giả lập giao dịch thực chiến với mô hình Triple Barrier. | `chart/BACKTEST.png` |
+| `Slide.pdf` | Thuyết trình | Slide trình bày case study, tóm tắt bài toán, hướng tiếp cận, kết quả thực nghiệm và kết luận. | File PDF dùng khi báo cáo |
 
-## 4. Các file dữ liệu chuẩn
+## 5. Các file dữ liệu chuẩn
 
 | File | Ý nghĩa | Cách tạo lại |
 |---|---|---|
@@ -175,9 +198,9 @@ Quy ước quan trọng:
 - `model_02.py` và `backtest.py` yêu cầu dữ liệu train/test đang ở chuẩn `Target_Dynamic`.
 - `xgboost_quant_model.pkl` bị ghi đè bởi `model_01.py` và `model_02.py`. Trước khi chạy backtest theo Triple Barrier, bắt buộc chạy lại `model_02.py`.
 
-## 5. Pipeline chạy lại từ đầu
+## 6. Pipeline chạy lại từ đầu
 
-### 5.1. Pipeline dữ liệu gốc T+3
+### 6.1. Pipeline dữ liệu gốc T+3
 
 Chạy khi muốn tái tạo dữ liệu chuẩn ban đầu cho các thực nghiệm 1, 1a, 1b, 1d, 1e:
 
@@ -196,7 +219,7 @@ Sau pipeline này, các file chuẩn cần có:
 - `VN30_Test.csv` với `Target_T3`
 - `chart/phan_phoi_nhan_T3.png`
 
-### 5.2. Pipeline baseline T+3
+### 6.2. Pipeline baseline T+3
 
 Chạy sau pipeline dữ liệu gốc T+3:
 
@@ -215,7 +238,7 @@ Baseline T+3 ban đầu ghi nhận:
 - TP: 644 lệnh bắt trúng.
 - FP: 1134 lệnh MUA sai/đu đỉnh.
 
-### 5.3. Pipeline Triple Barrier
+### 6.3. Pipeline Triple Barrier
 
 Chạy khi muốn tái tạo dữ liệu và model tốt nhất hiện tại:
 
@@ -247,9 +270,9 @@ Output backtest:
 
 - `chart/BACKTEST.png`
 
-## 6. Hướng dẫn chạy đúng theo từng thực nghiệm
+## 7. Hướng dẫn chạy đúng theo từng thực nghiệm
 
-### 6.1. Baseline T+3
+### 7.1. Baseline T+3
 
 Mục tiêu: xây dựng mô hình cơ sở dự đoán cổ phiếu tăng hơn 1.5% trong T+3.
 
@@ -270,7 +293,7 @@ File dữ liệu cần tìm sau khi chạy:
 - `xgboost_quant_model.pkl`
 - `chart/TN1.png`
 
-### 6.2. Thực nghiệm 1a: GridSearchCV và đặc trưng vĩ mô
+### 7.2. Thực nghiệm 1a: GridSearchCV và đặc trưng vĩ mô
 
 Mục tiêu: dùng GridSearchCV kết hợp biến trung bình chỉ báo của rổ VN30 để tối ưu Precision.
 
@@ -294,7 +317,7 @@ Bài học rút ra:
 
 > Thực nghiệm cho thấy việc để máy tính tự động dò tìm siêu tham số trên dữ liệu tài chính dễ dẫn đến hiện tượng quá khớp với nhiễu. Khi được cấp thêm các biến vĩ mô, cỗ máy từ bỏ tính phòng thủ ban đầu để trở nên hiếu chiến hơn, dẫn đến việc báo lệnh dễ dãi. Điều này chứng minh rằng trong thị trường chứng khoán đầy rủi ro, một thuật toán phức tạp hơn không đồng nghĩa với một kết quả giao dịch tốt hơn.
 
-### 6.3. Thực nghiệm 1b: Ép ngưỡng xác suất quyết định
+### 7.3. Thực nghiệm 1b: Ép ngưỡng xác suất quyết định
 
 Mục tiêu: dùng `predict_proba()` từ model baseline và chỉ báo MUA khi xác suất vượt ngưỡng 0.54.
 
@@ -322,7 +345,7 @@ Bài học rút ra:
 
 > Thực nghiệm này minh họa rõ nét bài toán đánh đổi giữa độ chính xác và độ phủ. Mặc dù việc nâng ngưỡng quyết định giúp bảo vệ vốn, nó bóp nghẹt thanh khoản của hệ thống, khiến tần suất giao dịch sụt giảm và không đủ để sinh ra lợi nhuận kép bù đắp chi phí cơ hội.
 
-### 6.4. Thực nghiệm 1c: Nâng chuẩn đầu ra lên 3%
+### 7.4. Thực nghiệm 1c: Nâng chuẩn đầu ra lên 3%
 
 Mục tiêu: thay vì tìm nhịp tăng 1.5% trong T+3, nâng mục tiêu lên 3% để tìm các mẫu hình tăng trưởng bùng nổ.
 
@@ -358,7 +381,7 @@ Bài học rút ra:
 
 > Thực nghiệm nâng mục tiêu lợi nhuận lên 3% để lọc siêu cổ phiếu đã làm giảm Precision xuống mức 28.79%. Điều này phản ánh bản chất cấu trúc của rổ VN30: đây là các cổ phiếu vốn hóa siêu lớn, việc giá bật tăng đột biến hơn 3% chỉ trong 3 ngày là những sự kiện dị biệt, thường do tin tức vĩ mô dẫn dắt chứ không tuân theo quy luật của các chỉ báo kỹ thuật truyền thống.
 
-### 6.5. Thực nghiệm 1d: Cross-Sectional Ranking
+### 7.5. Thực nghiệm 1d: Cross-Sectional Ranking
 
 Mục tiêu: chuyển các chỉ báo tuyệt đối thành điểm xếp hạng tương đối từ 0.0 đến 1.0 trong cùng một ngày giao dịch, nhằm tìm cổ phiếu mạnh nhất dòng tiền.
 
@@ -382,7 +405,7 @@ Bài học rút ra:
 
 > Thực nghiệm này vấp phải một cái bẫy kinh điển trong phân tích dòng tiền: kẻ mạnh nhất trong một thị trường sụp đổ vẫn là kẻ thua cuộc. Việc bình chuẩn hóa xếp hạng đã vô tình xóa sổ hoàn toàn bức tranh toàn cảnh. AI bị ép phải chọn ra những mã đẹp nhất mỗi ngày, kể cả vào những ngày thị trường hoảng loạn bán tháo.
 
-### 6.6. Thực nghiệm 1e: Meta-Labeling
+### 7.6. Thực nghiệm 1e: Meta-Labeling
 
 Mục tiêu: triển khai hệ thống AI kép. AI 1 phát hiện cơ hội, AI 2 kiểm duyệt và từ chối các lệnh rủi ro cao.
 
@@ -410,7 +433,7 @@ Bài học rút ra:
 
 > Mặc dù việc triển khai hệ thống AI kép tốn kém tài nguyên tính toán, Win-rate vẫn không thể vượt mốc 40%. Sự chững lại về mặt hiệu suất này là minh chứng cho việc hệ thống đã chạm đến trần thông tin của khung thời gian cứng T+3. Độ nhiễu siêu ngắn hạn mang nặng tính ngẫu nhiên khiến thuật toán dù phức tạp đến mấy cũng không thể bù đắp được khuyết điểm của dữ liệu gốc.
 
-### 6.7. Thực nghiệm 2: Triple Barrier Method
+### 7.7. Thực nghiệm 2: Triple Barrier Method
 
 Mục tiêu: bỏ khung T+3 cứng và mô phỏng quản trị vị thế thực tế bằng 3 bức tường:
 
@@ -440,7 +463,7 @@ Kết quả: bước đột phá. Win-rate tăng lên 42.58%, vượt xa baselin
 
 Hạn chế: Recall giảm xuống khoảng 13%. AI trở nên rất khắt khe và từ chối phần lớn cơ hội. Nguyên nhân cốt lõi được xác định là hiện tượng đa cộng tuyến giữa các chỉ báo kỹ thuật đầu vào, khiến AI chọn giải pháp an toàn là đứng ngoài thị trường.
 
-### 6.8. Thực nghiệm 2a: PCA khử đa cộng tuyến
+### 7.8. Thực nghiệm 2a: PCA khử đa cộng tuyến
 
 Mục tiêu: giải quyết tình trạng recall thấp của Triple Barrier bằng PCA, nén dữ liệu thành 15 siêu biến độc lập.
 
@@ -466,7 +489,7 @@ Bài học rút ra:
 
 > Việc sử dụng PCA để khử đa cộng tuyến gây ra tác dụng phụ: các siêu biến toán học làm mất đi ý nghĩa vật lý gốc của các chỉ báo tài chính, ví dụ vùng quá mua của RSI. Dưới góc độ quản trị rủi ro thực chiến, việc hi sinh Precision để đổi lấy Recall là một sự đánh đổi không an toàn.
 
-### 6.9. Thực nghiệm 2b: Chọn lọc đặc trưng theo domain knowledge
+### 7.9. Thực nghiệm 2b: Chọn lọc đặc trưng theo domain knowledge
 
 Mục tiêu: thay PCA bằng chọn lọc chỉ báo có ý nghĩa tài chính, gồm 4 nhóm: xu hướng, động lượng, biến động và dòng tiền.
 
@@ -492,7 +515,7 @@ Bài học rút ra:
 
 > Thực nghiệm chứng minh việc áp đặt định kiến của con người vào chọn lọc biến đầu vào không mang lại hiệu quả cao hơn thuật toán tự học. Khi bị ép nhìn vào các chỉ báo dòng tiền hay biến động, vốn chứa nhiều nhiễu trên VN30, AI bị phân tâm khỏi các tín hiệu cốt lõi.
 
-### 6.10. Thực nghiệm 2c: Macro Regime Filter
+### 7.10. Thực nghiệm 2c: Macro Regime Filter
 
 Mục tiêu: chỉ cho phép AI MUA khi VN30 mô phỏng đang trong pha uptrend, xác định bằng giá trung bình rổ VN30 lớn hơn SMA 100.
 
@@ -518,7 +541,7 @@ Bài học rút ra:
 
 > Thực nghiệm minh chứng cho cái bẫy độ trễ kinh điển trong phân tích kỹ thuật. Việc sử dụng SMA 100 làm tấm khiên chắn khiến hệ thống mất đi sự linh hoạt. Mô hình bị ép phải mua đuổi khi xu hướng đã quá rõ ràng và bị cấm giải ngân ở những nhịp điều chỉnh sâu.
 
-## 7. Backtest mô hình Triple Barrier
+## 8. Backtest mô hình Triple Barrier
 
 Backtest chỉ nên chạy sau khi đã tạo đúng model Triple Barrier từ Thực nghiệm 2:
 
@@ -552,7 +575,7 @@ Output:
 - `chart/BACKTEST.png`
 - Báo cáo tổng tài sản cuối kỳ, tổng lợi nhuận ròng, tổng số lệnh và Win-rate thực tế được in ra terminal.
 
-## 8. Bảng tổng hợp kết quả thực nghiệm
+## 9. Bảng tổng hợp kết quả thực nghiệm
 
 Ghi chú mốc so sánh: mô hình cơ sở Baseline T+3 ban đầu ghi nhận Win-rate 36.22%, với 1134 lệnh báo MUA sai và 644 lệnh bắt trúng.
 
@@ -569,9 +592,9 @@ Ghi chú mốc so sánh: mô hình cơ sở Baseline T+3 ban đầu ghi nhận W
 | 2b | Domain feature selection | 39.50% | 670 | 1026 | Human bias không vượt thuật toán tự chọn |
 | 2c | Macro regime filter | 39.67% | 315 | 479 | Bộ lọc SMA 100 bị trễ và bỏ lỡ vùng đáy |
 
-## 9. Báo cáo chi tiết các thực nghiệm
+## 10. Báo cáo chi tiết các thực nghiệm
 
-### 9.1. Mô hình cơ sở: Baseline T+3
+### 10.1. Mô hình cơ sở: Baseline T+3
 
 Mô hình cơ sở sử dụng XGBoost trên tập dữ liệu đã được lọc Top 15 chỉ báo kỹ thuật, với nhãn `Target_T3 = 1` khi cổ phiếu tăng hơn 1.5% sau 3 ngày giao dịch. Đây là mốc chuẩn để đánh giá toàn bộ các cải tiến phía sau.
 
@@ -585,7 +608,7 @@ Kết quả baseline:
 
 Ý nghĩa: baseline có khả năng tìm được một phần các nhịp tăng ngắn hạn, nhưng số lệnh sai còn lớn. Đây là vấn đề chính cần tối ưu trong các thực nghiệm sau: tăng Precision mà không bóp nghẹt số lượng cơ hội giao dịch.
 
-### 9.2. Thực nghiệm 1a: Tối ưu siêu tham số và bổ sung đặc trưng vĩ mô
+### 10.2. Thực nghiệm 1a: Tối ưu siêu tham số và bổ sung đặc trưng vĩ mô
 
 Mục tiêu: sử dụng GridSearchCV kết hợp tạo thêm biến trung bình chỉ báo của toàn rổ VN30. Ý tưởng là giúp mô hình có thêm góc nhìn vĩ mô, thay vì chỉ nhìn từng cổ phiếu riêng lẻ. GridSearchCV được dùng để dò tìm cấu hình XGBoost tốt hơn, ưu tiên tối ưu tỷ lệ lệnh MUA đúng.
 
@@ -615,7 +638,7 @@ Bài học rút ra:
 
 > Thực nghiệm cho thấy việc để máy tính tự động dò tìm siêu tham số trên dữ liệu tài chính dễ dẫn đến hiện tượng quá khớp với nhiễu. Khi được cấp thêm các biến vĩ mô, cỗ máy từ bỏ tính phòng thủ ban đầu để trở nên hiếu chiến hơn, dẫn đến việc báo lệnh dễ dãi. Điều này chứng minh rằng trong thị trường chứng khoán đầy rủi ro, một thuật toán phức tạp hơn không đồng nghĩa với một kết quả giao dịch tốt hơn, đúng với nguyên lý Occam's Razor.
 
-### 9.3. Thực nghiệm 1b: Ép ngưỡng xác suất quyết định
+### 10.3. Thực nghiệm 1b: Ép ngưỡng xác suất quyết định
 
 Mục tiêu: thay vì dùng nhãn dự đoán mặc định từ `predict()`, mô hình lấy xác suất bằng `predict_proba()` và chỉ phát lệnh MUA khi xác suất vượt ngưỡng tự tin. Trong code hiện tại, ngưỡng được đặt là `0.54`.
 
@@ -644,7 +667,7 @@ Bài học rút ra:
 
 > Thực nghiệm này minh họa rõ nét bài toán đánh đổi giữa độ chính xác và độ phủ. Mặc dù việc nâng ngưỡng quyết định giúp bảo vệ vốn, nó bóp nghẹt thanh khoản của hệ thống, khiến tần suất giao dịch sụt giảm và không đủ để sinh ra lợi nhuận kép bù đắp chi phí cơ hội.
 
-### 9.4. Thực nghiệm 1c: Nâng chuẩn đầu ra và tìm kiếm siêu cổ phiếu
+### 10.4. Thực nghiệm 1c: Nâng chuẩn đầu ra và tìm kiếm siêu cổ phiếu
 
 Mục tiêu: thay vì huấn luyện AI tìm các nhịp tăng 1.5% trong T+3, nâng kỳ vọng lên 3% trong T+3 để mô hình chỉ học các mẫu hình tăng trưởng mạnh, rõ ràng hơn và ít nhiễu hơn.
 
@@ -676,7 +699,7 @@ Bài học rút ra:
 
 > Thực nghiệm nâng mục tiêu lợi nhuận lên 3% để lọc siêu cổ phiếu đã làm giảm Precision xuống mức 28.79%. Điều này phản ánh bản chất cấu trúc của rổ VN30: đây là các cổ phiếu vốn hóa siêu lớn, việc giá bật tăng đột biến hơn 3% chỉ trong 3 ngày là những sự kiện dị biệt, thường do tin tức vĩ mô dẫn dắt chứ không tuân theo quy luật của các chỉ báo kỹ thuật truyền thống.
 
-### 9.5. Thực nghiệm 1d: Biến đổi dữ liệu theo điểm xếp hạng
+### 10.5. Thực nghiệm 1d: Biến đổi dữ liệu theo điểm xếp hạng
 
 Mục tiêu: loại bỏ nhiễu từ xu hướng chung bằng cách không dùng giá trị tuyệt đối của chỉ báo, ví dụ RSI = 60, mà chuyển thành điểm xếp hạng tương đối trong cùng ngày giao dịch. Mỗi cổ phiếu được xếp hạng so với 29 mã còn lại trong rổ VN30, với điểm từ 0.0 đến 1.0.
 
@@ -703,7 +726,7 @@ Bài học rút ra:
 
 > Thực nghiệm này vấp phải một cái bẫy kinh điển trong phân tích dòng tiền: kẻ mạnh nhất trong một thị trường sụp đổ vẫn là kẻ thua cuộc. Việc bình chuẩn hóa xếp hạng đã vô tình xóa sổ hoàn toàn bức tranh toàn cảnh, hay absolute momentum. AI bị ép phải chọn ra những mã đẹp nhất mỗi ngày, kể cả vào những ngày thị trường hoảng loạn bán tháo.
 
-### 9.6. Thực nghiệm 1e: Hệ thống trí tuệ nhân tạo kép
+### 10.6. Thực nghiệm 1e: Hệ thống trí tuệ nhân tạo kép
 
 Mục tiêu: áp dụng Meta-Labeling theo tư duy của Marcos Lopez de Prado. AI 1 đóng vai trò tìm cơ hội, AI 2 đóng vai trò vệ sĩ kiểm duyệt các lệnh MUA do AI 1 đề xuất, từ đó cố gắng loại bỏ các lệnh rủi ro cao.
 
@@ -734,7 +757,7 @@ Bài học rút ra:
 
 > Mặc dù việc triển khai hệ thống AI kép tốn kém tài nguyên tính toán, Win-rate vẫn không thể vượt mốc 40%. Sự chững lại về mặt hiệu suất này là minh chứng rõ ràng cho việc hệ thống đã chạm đến trần thông tin của khung thời gian cứng T+3. Độ nhiễu siêu ngắn hạn mang nặng tính ngẫu nhiên khiến thuật toán dù phức tạp đến mấy cũng không thể bù đắp được khuyết điểm của dữ liệu gốc.
 
-### 9.7. Thực nghiệm 2: Thay nhãn cứng bằng Triple Barrier Method
+### 10.7. Thực nghiệm 2: Thay nhãn cứng bằng Triple Barrier Method
 
 Mục tiêu: loại bỏ tư duy dự đoán khung thời gian cứng T+3 và thay bằng nhãn động mô phỏng quản trị vị thế thực tế. Một lệnh được xem là thành công nếu chạm Take Profit trước Stop Loss trong thời gian nắm giữ tối đa.
 
@@ -772,7 +795,7 @@ Hạn chế tồn tại: Recall giảm xuống khoảng 13%. AI trở nên rất
 
 Diễn giải: thay đổi cách gán nhãn tạo ra cải thiện lớn hơn mọi tinh chỉnh mô hình trước đó. Điều này cho thấy vấn đề chính không nằm ở XGBoost, mà nằm ở định nghĩa mục tiêu học. Triple Barrier gần hơn với hành vi giao dịch thực tế nên tín hiệu học được có chất lượng cao hơn.
 
-### 9.8. Thực nghiệm 2a: Khử đa cộng tuyến bằng PCA
+### 10.8. Thực nghiệm 2a: Khử đa cộng tuyến bằng PCA
 
 Mục tiêu: xử lý tình trạng mô hình Triple Barrier quá thận trọng và Recall chỉ khoảng 13%. PCA được dùng để nén không gian chỉ báo kỹ thuật thành 15 thành phần chính độc lập hơn, kỳ vọng giảm đa cộng tuyến và giải phóng thanh khoản.
 
@@ -802,7 +825,7 @@ Bài học rút ra:
 
 > Việc sử dụng PCA để khử đa cộng tuyến gây ra tác dụng phụ: các siêu biến toán học làm mất đi ý nghĩa vật lý gốc của các chỉ báo tài chính, ví dụ vùng quá mua của RSI. Dưới góc độ quản trị rủi ro thực chiến, việc hi sinh Precision để đổi lấy Recall là một sự đánh đổi không an toàn.
 
-### 9.9. Thực nghiệm 2b: Chọn lọc đặc trưng trực giao theo domain knowledge
+### 10.9. Thực nghiệm 2b: Chọn lọc đặc trưng trực giao theo domain knowledge
 
 Mục tiêu: khắc phục nhược điểm mất ý nghĩa tài chính của PCA. Thay vì nén toán học, thực nghiệm áp đặt tư duy con người để chọn một bộ chỉ báo cân bằng từ 4 nhóm: xu hướng, động lượng, biến động và dòng tiền.
 
@@ -833,7 +856,7 @@ Bài học rút ra:
 
 > Thực nghiệm chứng minh việc áp đặt định kiến của con người vào chọn lọc biến đầu vào không mang lại hiệu quả cao hơn thuật toán tự học. Khi bị ép nhìn vào các chỉ báo dòng tiền hay biến động, vốn chứa nhiều nhiễu trên VN30, AI bị phân tâm khỏi các tín hiệu cốt lõi.
 
-### 9.10. Thực nghiệm 2c: Tích hợp bộ lọc vĩ mô
+### 10.10. Thực nghiệm 2c: Tích hợp bộ lọc vĩ mô
 
 Mục tiêu: vượt ngưỡng Win-rate của mô hình Triple Barrier bằng cách thêm lăng kính thị trường chung. Mô hình chỉ được phép khớp lệnh MUA khi chỉ số VN30 mô phỏng đang ở pha Uptrend, được xác định bằng điều kiện giá trung bình rổ VN30 lớn hơn SMA 100.
 
@@ -863,7 +886,7 @@ Bài học rút ra:
 
 > Thực nghiệm minh chứng cho cái bẫy độ trễ kinh điển trong phân tích kỹ thuật. Việc sử dụng SMA 100 làm tấm khiên chắn khiến hệ thống mất đi sự linh hoạt. Mô hình bị ép phải mua đuổi khi xu hướng đã quá rõ ràng, thường là đỉnh ngắn hạn, và bị cấm giải ngân ở những nhịp điều chỉnh sâu, tức vùng đáy hoảng loạn.
 
-## 10. Kết luận toàn tập
+## 11. Kết luận toàn tập
 
 Sau 9 vòng thực nghiệm bao quát các hướng tối ưu từ siêu tham số, xếp hạng tương đối, AI kép, nén chiều không gian bằng PCA cho đến bộ lọc vĩ mô, kết luận hiện tại là:
 
@@ -878,7 +901,7 @@ Kết luận thực dụng cho giai đoạn tiếp theo:
 - Đánh giá mô hình bằng lợi nhuận ròng, drawdown, số lệnh, phí giao dịch và độ ổn định theo thời gian.
 - Nếu mở rộng nghiên cứu, ưu tiên thêm nguồn dữ liệu mới có thông tin thật sự khác biệt như dữ liệu thị trường phái sinh, tin tức, dòng tiền tổ chức hoặc biến vĩ mô chất lượng cao.
 
-## 11. Cảnh báo vận hành
+## 12. Cảnh báo vận hành
 
 - Không chạy lẫn nhánh T+3 và nhánh Triple Barrier mà không tạo lại `VN30_Train.csv` và `VN30_Test.csv`.
 - `redefine_target_01c.py` ghi đè `VN30_Cleaned_Dataset.csv`. Muốn quay lại target 1.5%, chạy lại `dataset.py` và `data_cleaning.py`.
